@@ -1,0 +1,23 @@
+FROM ros:humble-cuda12
+
+WORKDIR /home/$USER/ros2_ws/src
+USER $USER
+RUN git clone https://github.com/IntelRealSense/realsense-ros.git --recursive
+
+USER root
+WORKDIR /home/$USER/ros2_ws
+RUN source /opt/ros/humble/setup.bash && \
+    rosdep init && \
+    rosdep update && \
+    apt-get update && \
+    rosdep install --from-paths . -y --ignore-src --rosdistro humble && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/debconf/* /var/log/*
+
+USER $USER
+RUN source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release && \
+    source ./install/setup.bash
+
+RUN echo "source /home/$USER/ros2_ws/install/setup.bash" >> /home/$USER/.bashrc
+
+WORKDIR /home/$USER/ros2_ws
+CMD ["vglrun", "/bin/bash"]
