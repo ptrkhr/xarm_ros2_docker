@@ -3,7 +3,7 @@ FROM ros:humble-cuda12
 USER $USER
 WORKDIR /home/$USER
 ADD --chown=$UID:$GID docker/ufactory*.AppImage /home/$USER/ufactory.AppImage
-RUN ls -lah /home/$USER && /home/$USER/ufactory.AppImage --appimage-extract && mkdir /home/$USER/.UFACTORY
+RUN /home/$USER/ufactory.AppImage --appimage-extract && mkdir -p /home/$USER/.UFACTORY
 
 VOLUME ["/home/$USER/.UFACTORY"]
 ENTRYPOINT ["vglrun", "/bin/bash", "-i", "-c"]
