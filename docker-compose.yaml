@@ -1,0 +1,94 @@
+volumes:
+  x11unix:
+
+services:
+  desktop:
+    image: ghcr.io/matsuolab/virtual_desktop:latest
+    runtime: nvidia
+    networks:
+      - ros_test
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY
+    ports:
+      # NOTE: uncomment if you want to use VNC client instead of NoVNC
+      #- 5910:15900
+      - "${WEB_PORT}:6080"
+    volumes: 
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    security_opt:
+      - seccomp:unconfined
+  ufactory:
+    image: matsuolab/ufactory-studio:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ufactory
+    volumes: 
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY
+    user: "1000:1000"
+    security_opt:
+      - seccomp:unconfined
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  xarm:
+    image: matsuolab/xarm:humble
+    user: "1000:1000"
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.xarm_humble
+    volumes: 
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY
+    networks:
+      - ros_test
+    security_opt:
+      - seccomp:unconfined
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  realsense:
+    image: matsuolab/realsense:humble
+    user: "1000:1000"
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.realsense
+    volumes: 
+      - "/tmp/.X11-unix:/tmp/.X11-unix:rw"
+      - "/dev:/dev"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY
+    privileged: true
+    networks:
+      - ros_test
+    security_opt:
+      - seccomp:unconfined
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+networks:
+  ros_test:
+    name: ros_test
+    external: true
